@@ -1,5 +1,6 @@
 require 'ruby-prof/abstract_printer'
 require 'erb'
+require 'fileutils'
 
 module RubyProf
   class CallStackPrinter < AbstractPrinter
