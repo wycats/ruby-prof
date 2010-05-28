@@ -31,7 +31,7 @@ module RubyProf
 
       @result.threads.keys.sort.each do |thread_id|
         @current_thread_id = thread_id
-        @overall_time = @threads_totals[thread_id]
+        @overall_time = @threads_totals[thread_id] > 0 ? @threads_totals[thread_id] : 0.01
         @output.print "<div class=\"thread\">Thread: #{thread_id} (#{"%4.2f%%" % ((@overall_time/@overall_threads_time)*100)} ~ #{@overall_time} seconds)</div>"
         @output.print "<ul name=\"thread\">"
         @result.threads[thread_id].each do |m|
@@ -51,7 +51,7 @@ module RubyProf
     end
 
     def print_stack(call_info, parent_time)
-      total_time = call_info.total_time
+      total_time = call_info.total_time > 0 ? call_info.total_time : 0.01
       percent_parent = (total_time/parent_time)*100
       percent_total = (total_time/@overall_time)*100
       return unless percent_total > min_percent
