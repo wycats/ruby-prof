@@ -1,3 +1,5 @@
+require 'datetime'
+
 version_header = File.read('ext/ruby_prof/version.h')
 match = version_header.match(/RUBY_PROF_VERSION\s*["](\d.+)["]/)
 raise(RuntimeError, "Could not determine RUBY_PROF_VERSION") if not match
