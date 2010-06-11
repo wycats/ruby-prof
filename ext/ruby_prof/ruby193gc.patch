@@ -1,0 +1,44 @@
+diff --git a/gc.c b/gc.c
+index 58e4550..02a93e3 100644
+--- a/gc.c
++++ b/gc.c
+@@ -346,6 +346,7 @@ typedef struct rb_objspace {
+     struct {
+ 	int run;
+ 	gc_profile_record *record;
++	size_t gc_runs;
+ 	size_t count;
+ 	size_t size;
+ 	double invoke_time;
+@@ -1003,6 +1004,7 @@ init_heap(rb_objspace_t *objspace)
+     }
+     heaps_inc = 0;
+     objspace->profile.invoke_time = getrusage_time();
++    objspace->profile.gc_runs = 0;
+ }
+ 
+ 
+@@ -2363,6 +2365,7 @@ static int
+ garbage_collect(rb_objspace_t *objspace)
+ {
+     INIT_GC_PROF_PARAMS;
++    objspace->profile.gc_runs++;
+ 
+     if (GC_NOTIFY) printf("start garbage_collect()\n");
+ 
+@@ -3215,6 +3218,7 @@ gc_profile_record_get(void)
+ 	prof = rb_hash_new();
+         rb_hash_aset(prof, ID2SYM(rb_intern("GC_TIME")), DBL2NUM(objspace->profile.record[i].gc_time));
+         rb_hash_aset(prof, ID2SYM(rb_intern("GC_INVOKE_TIME")), DBL2NUM(objspace->profile.record[i].gc_invoke_time));
++        rb_hash_aset(prof, ID2SYM(rb_intern("GC_RUNS")), rb_uint2inum(objspace->profile.gc_runs));
+         rb_hash_aset(prof, ID2SYM(rb_intern("HEAP_USE_SIZE")), rb_uint2inum(objspace->profile.record[i].heap_use_size));
+         rb_hash_aset(prof, ID2SYM(rb_intern("HEAP_TOTAL_SIZE")), rb_uint2inum(objspace->profile.record[i].heap_total_size));
+         rb_hash_aset(prof, ID2SYM(rb_intern("HEAP_TOTAL_OBJECTS")), rb_uint2inum(objspace->profile.record[i].heap_total_objects));
+@@ -3375,6 +3379,7 @@ Init_GC(void)
+     rb_define_singleton_method(rb_mProfiler, "result", gc_profile_result, 0);
+     rb_define_singleton_method(rb_mProfiler, "report", gc_profile_report, -1);
+     rb_define_singleton_method(rb_mProfiler, "total_time", gc_profile_total_time, 0);
++    rb_define_singleton_method(rb_mProfiler, "data", gc_profile_record_get, 0);
+ 
+     rb_mObSpace = rb_define_module("ObjectSpace");
+     rb_define_module_function(rb_mObSpace, "each_object", os_each_obj, -1);
