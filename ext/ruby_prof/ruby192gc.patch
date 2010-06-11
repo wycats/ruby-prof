@@ -26,3 +26,19 @@ index f7d2d3d..01d1cd2 100644
  
      if (GC_NOTIFY) printf("start garbage_collect()\n");
  
+@@ -3046,6 +3049,7 @@ gc_profile_record_get(void)
+ 	prof = rb_hash_new();
+         rb_hash_aset(prof, ID2SYM(rb_intern("GC_TIME")), DBL2NUM(objspace->profile.record[i].gc_time));
+         rb_hash_aset(prof, ID2SYM(rb_intern("GC_INVOKE_TIME")), DBL2NUM(objspace->profile.record[i].gc_invoke_time));
++        rb_hash_aset(prof, ID2SYM(rb_intern("GC_RUNS")), rb_uint2inum(objspace->profile.gc_runs));
+         rb_hash_aset(prof, ID2SYM(rb_intern("HEAP_USE_SIZE")), rb_uint2inum(objspace->profile.record[i].heap_use_size));
+         rb_hash_aset(prof, ID2SYM(rb_intern("HEAP_TOTAL_SIZE")), rb_uint2inum(objspace->profile.record[i].heap_total_size));
+         rb_hash_aset(prof, ID2SYM(rb_intern("HEAP_TOTAL_OBJECTS")), rb_uint2inum(objspace->profile.record[i].heap_total_objects));
+@@ -3196,6 +3200,7 @@ Init_GC(void)
+     rb_define_singleton_method(rb_mProfiler, "result", gc_profile_result, 0);
+     rb_define_singleton_method(rb_mProfiler, "report", gc_profile_report, -1);
+     rb_define_singleton_method(rb_mProfiler, "total_time", gc_profile_total_time, 0);
++    rb_define_singleton_method(rb_mProfiler, "data", gc_profile_record_get, 0);
+ 
+     rb_mObSpace = rb_define_module("ObjectSpace");
+     rb_define_module_function(rb_mObSpace, "each_object", os_each_obj, -1);
