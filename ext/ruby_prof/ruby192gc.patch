@@ -1,0 +1,28 @@
+diff --git a/gc.c b/gc.c
+index f7d2d3d..01d1cd2 100644
+--- a/gc.c
++++ b/gc.c
+@@ -327,6 +327,7 @@ typedef struct rb_objspace {
+     struct {
+ 	int run;
+ 	gc_profile_record *record;
++	size_t gc_runs;
+ 	size_t count;
+ 	size_t size;
+ 	double invoke_time;
+@@ -973,6 +974,7 @@ init_heap(rb_objspace_t *objspace)
+     }
+     heaps_inc = 0;
+     objspace->profile.invoke_time = getrusage_time();
++    objspace->profile.gc_runs = 0;
+ }
+ 
+ 
+@@ -2143,6 +2145,7 @@ garbage_collect(rb_objspace_t *objspace)
+     struct gc_list *list;
+     rb_thread_t *th = GET_THREAD();
+     INIT_GC_PROF_PARAMS;
++    objspace->profile.gc_runs++;
+ 
+     if (GC_NOTIFY) printf("start garbage_collect()\n");
+ 
