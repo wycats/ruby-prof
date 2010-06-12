@@ -23,11 +23,11 @@ module RubyProf
     end      
 
     def min_percent
-      @options[:min_percent] || 0
+      get_options_key("min_percent") || 0
     end
     
     def print_file
-      @options[:print_file] || false
+      get_options_key("print_file") || false
     end
     
     def method_name(method)
@@ -37,5 +37,14 @@ module RubyProf
       end
       name
     end
+    
+    private
+      def get_options_key(key)
+        if @options.is_a?(Hash) and @options.has_key?(key)
+          @options[key]
+        else
+          nil
+        end
+      end
   end
 end 
