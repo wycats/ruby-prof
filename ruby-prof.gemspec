@@ -47,7 +47,7 @@ EOF
   spec.extensions = ["ext/ruby_prof/extconf.rb"]
   spec.files = FILES.to_a
   spec.test_files = Dir["test/test_*.rb"]
-  spec.required_ruby_version = '>= 1.8.4'
+  spec.required_ruby_version = '>= 1.8.6'
   spec.date = DateTime.now
   spec.rubyforge_project = 'ruby-prof'
   spec.add_development_dependency 'os'
