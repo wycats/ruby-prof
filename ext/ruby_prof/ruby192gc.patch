@@ -1,8 +1,25 @@
 diff --git a/gc.c b/gc.c
-index f7d2d3d..01d1cd2 100644
+index f7d2d3d..b970b1d 100644
 --- a/gc.c
 +++ b/gc.c
-@@ -327,6 +327,7 @@ typedef struct rb_objspace {
+@@ -291,16 +291,12 @@ struct gc_list {
+     struct gc_list *next;
+ };
+ 
+-#define CALC_EXACT_MALLOC_SIZE 0
+-
+ typedef struct rb_objspace {
+     struct {
+ 	size_t limit;
+ 	size_t increase;
+-#if CALC_EXACT_MALLOC_SIZE
+ 	size_t allocated_size;
+ 	size_t allocations;
+-#endif
+     } malloc_params;
+     struct {
+ 	size_t increment;
+@@ -327,6 +323,7 @@ typedef struct rb_objspace {
      struct {
  	int run;
  	gc_profile_record *record;
@@ -10,7 +27,68 @@ index f7d2d3d..01d1cd2 100644
  	size_t count;
  	size_t size;
  	double invoke_time;
-@@ -973,6 +974,7 @@ init_heap(rb_objspace_t *objspace)
+@@ -647,9 +644,7 @@ vm_xmalloc(rb_objspace_t *objspace, size_t size)
+     }
+     if (size == 0) size = 1;
+ 
+-#if CALC_EXACT_MALLOC_SIZE
+     size += sizeof(size_t);
+-#endif
+ 
+     if ((ruby_gc_stress && !ruby_disable_gc_stress) ||
+ 	(malloc_increase+size) > malloc_limit) {
+@@ -666,12 +661,10 @@ vm_xmalloc(rb_objspace_t *objspace, size_t size)
+     }
+     malloc_increase += size;
+ 
+-#if CALC_EXACT_MALLOC_SIZE
+     objspace->malloc_params.allocated_size += size;
+     objspace->malloc_params.allocations++;
+     ((size_t *)mem)[0] = size;
+     mem = (size_t *)mem + 1;
+-#endif
+ 
+     return mem;
+ }
+@@ -692,11 +685,9 @@ vm_xrealloc(rb_objspace_t *objspace, void *ptr, size_t size)
+     if (ruby_gc_stress && !ruby_disable_gc_stress)
+ 	garbage_collect_with_gvl(objspace);
+ 
+-#if CALC_EXACT_MALLOC_SIZE
+     size += sizeof(size_t);
+     objspace->malloc_params.allocated_size -= size;
+     ptr = (size_t *)ptr - 1;
+-#endif
+ 
+     mem = realloc(ptr, size);
+     if (!mem) {
+@@ -709,11 +700,9 @@ vm_xrealloc(rb_objspace_t *objspace, void *ptr, size_t size)
+     }
+     malloc_increase += size;
+ 
+-#if CALC_EXACT_MALLOC_SIZE
+     objspace->malloc_params.allocated_size += size;
+     ((size_t *)mem)[0] = size;
+     mem = (size_t *)mem + 1;
+-#endif
+ 
+     return mem;
+ }
+@@ -721,13 +710,11 @@ vm_xrealloc(rb_objspace_t *objspace, void *ptr, size_t size)
+ static void
+ vm_xfree(rb_objspace_t *objspace, void *ptr)
+ {
+-#if CALC_EXACT_MALLOC_SIZE
+     size_t size;
+     ptr = ((size_t *)ptr) - 1;
+     size = ((size_t*)ptr)[0];
+     objspace->malloc_params.allocated_size -= size;
+     objspace->malloc_params.allocations--;
+-#endif
+ 
+     free(ptr);
+ }
+@@ -973,6 +960,7 @@ init_heap(rb_objspace_t *objspace)
      }
      heaps_inc = 0;
      objspace->profile.invoke_time = getrusage_time();
@@ -18,7 +96,7 @@ index f7d2d3d..01d1cd2 100644
  }
  
  
-@@ -2143,6 +2145,7 @@ garbage_collect(rb_objspace_t *objspace)
+@@ -2143,6 +2131,7 @@ garbage_collect(rb_objspace_t *objspace)
      struct gc_list *list;
      rb_thread_t *th = GET_THREAD();
      INIT_GC_PROF_PARAMS;
@@ -26,15 +104,57 @@ index f7d2d3d..01d1cd2 100644
  
      if (GC_NOTIFY) printf("start garbage_collect()\n");
  
-@@ -3046,6 +3049,7 @@ gc_profile_record_get(void)
+@@ -2998,38 +2987,6 @@ gc_count(VALUE self)
+     return UINT2NUM((&rb_objspace)->count);
+ }
+ 
+-#if CALC_EXACT_MALLOC_SIZE
+-/*
+- *  call-seq:
+- *     GC.malloc_allocated_size -> Integer
+- *
+- *  The allocated size by malloc().
+- *
+- *  It returns the allocated size by malloc().
+- */
+-
+-static VALUE
+-gc_malloc_allocated_size(VALUE self)
+-{
+-    return UINT2NUM((&rb_objspace)->malloc_params.allocated_size);
+-}
+-
+-/*
+- *  call-seq:
+- *     GC.malloc_allocations -> Integer
+- *
+- *  The number of allocated memory object by malloc().
+- *
+- *  It returns the number of allocated memory object by malloc().
+- */
+-
+-static VALUE
+-gc_malloc_allocations(VALUE self)
+-{
+-    return UINT2NUM((&rb_objspace)->malloc_params.allocations);
+-}
+-#endif
+-
+ static VALUE
+ gc_profile_record_get(void)
+ {
+@@ -3046,7 +3003,10 @@ gc_profile_record_get(void)
  	prof = rb_hash_new();
          rb_hash_aset(prof, ID2SYM(rb_intern("GC_TIME")), DBL2NUM(objspace->profile.record[i].gc_time));
          rb_hash_aset(prof, ID2SYM(rb_intern("GC_INVOKE_TIME")), DBL2NUM(objspace->profile.record[i].gc_invoke_time));
 +        rb_hash_aset(prof, ID2SYM(rb_intern("GC_RUNS")), rb_uint2inum(objspace->profile.gc_runs));
++        rb_hash_aset(prof, ID2SYM(rb_intern("MALLOC_ALLOCATED_SIZE")), rb_uint2inum(objspace->malloc_params.allocated_size));
++        rb_hash_aset(prof, ID2SYM(rb_intern("MALLOC_ALLOCATIONS")), rb_uint2inum(objspace->malloc_params.allocations));
          rb_hash_aset(prof, ID2SYM(rb_intern("HEAP_USE_SIZE")), rb_uint2inum(objspace->profile.record[i].heap_use_size));
          rb_hash_aset(prof, ID2SYM(rb_intern("HEAP_TOTAL_SIZE")), rb_uint2inum(objspace->profile.record[i].heap_total_size));
          rb_hash_aset(prof, ID2SYM(rb_intern("HEAP_TOTAL_OBJECTS")), rb_uint2inum(objspace->profile.record[i].heap_total_objects));
-@@ -3196,6 +3200,7 @@ Init_GC(void)
+ #if GC_PROFILE_MORE_DETAIL
+@@ -3196,6 +3156,7 @@ Init_GC(void)
      rb_define_singleton_method(rb_mProfiler, "result", gc_profile_result, 0);
      rb_define_singleton_method(rb_mProfiler, "report", gc_profile_report, -1);
      rb_define_singleton_method(rb_mProfiler, "total_time", gc_profile_total_time, 0);
@@ -42,3 +162,13 @@ index f7d2d3d..01d1cd2 100644
  
      rb_mObSpace = rb_define_module("ObjectSpace");
      rb_define_module_function(rb_mObSpace, "each_object", os_each_obj, -1);
+@@ -3215,9 +3176,4 @@ Init_GC(void)
+     rb_define_method(rb_mKernel, "object_id", rb_obj_id, 0);
+ 
+     rb_define_module_function(rb_mObSpace, "count_objects", count_objects, -1);
+-
+-#if CALC_EXACT_MALLOC_SIZE
+-    rb_define_singleton_method(rb_mGC, "malloc_allocated_size", gc_malloc_allocated_size, 0);
+-    rb_define_singleton_method(rb_mGC, "malloc_allocations", gc_malloc_allocations, 0);
+-#endif
+ }
