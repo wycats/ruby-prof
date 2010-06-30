@@ -1,5 +1,5 @@
 diff --git a/gc.c b/gc.c
-index 8750a27..ae1b5a9 100644
+index 20c34a7..0bec2e2 100644
 --- a/gc.c
 +++ b/gc.c
 @@ -304,16 +304,12 @@ struct gc_list {
@@ -82,7 +82,7 @@ index 8750a27..ae1b5a9 100644
      free(ptr);
  }
  
-@@ -3168,7 +3140,6 @@ gc_count(VALUE self)
+@@ -3183,7 +3155,6 @@ gc_count(VALUE self)
      return UINT2NUM((&rb_objspace)->count);
  }
  
@@ -90,7 +90,7 @@ index 8750a27..ae1b5a9 100644
  /*
   *  call-seq:
   *     GC.malloc_allocated_size -> Integer
-@@ -3198,7 +3169,6 @@ gc_malloc_allocations(VALUE self)
+@@ -3213,7 +3184,6 @@ gc_malloc_allocations(VALUE self)
  {
      return UINT2NUM((&rb_objspace)->malloc_params.allocations);
  }
@@ -98,7 +98,7 @@ index 8750a27..ae1b5a9 100644
  
  static VALUE
  gc_profile_record_get(void)
-@@ -3366,6 +3336,8 @@ Init_GC(void)
+@@ -3381,6 +3351,8 @@ Init_GC(void)
      rb_define_singleton_method(rb_mGC, "stress", gc_stress_get, 0);
      rb_define_singleton_method(rb_mGC, "stress=", gc_stress_set, 1);
      rb_define_singleton_method(rb_mGC, "count", gc_count, 0);
@@ -107,7 +107,15 @@ index 8750a27..ae1b5a9 100644
      rb_define_method(rb_mGC, "garbage_collect", rb_gc_start, 0);
  
      rb_mProfiler = rb_define_module_under(rb_mGC, "Profiler");
-@@ -3395,9 +3367,4 @@ Init_GC(void)
+@@ -3391,6 +3363,7 @@ Init_GC(void)
+     rb_define_singleton_method(rb_mProfiler, "result", gc_profile_result, 0);
+     rb_define_singleton_method(rb_mProfiler, "report", gc_profile_report, -1);
+     rb_define_singleton_method(rb_mProfiler, "total_time", gc_profile_total_time, 0);
++    rb_define_singleton_method(rb_mProfiler, "data", gc_profile_record_get, 0);
+ 
+     rb_mObSpace = rb_define_module("ObjectSpace");
+     rb_define_module_function(rb_mObSpace, "each_object", os_each_obj, -1);
+@@ -3410,9 +3383,4 @@ Init_GC(void)
      rb_define_method(rb_mKernel, "object_id", rb_obj_id, 0);
  
      rb_define_module_function(rb_mObSpace, "count_objects", count_objects, -1);
