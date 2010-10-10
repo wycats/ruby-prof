@@ -1,4 +1,5 @@
-# require the  .so file
+# require the  .so file...
+
 me = File.dirname(__FILE__) + '/'
 begin
   # fat binaries
@@ -54,6 +55,7 @@ module RubyProf
     when "memory"
       RubyProf.measure_mode = RubyProf::MEMORY
     else
+      # the default...
       RubyProf.measure_mode = RubyProf::PROCESS_TIME
     end
   end

@@ -115,8 +115,11 @@ module RubyProf
       srcfile = File.expand_path(path)
       if srcfile =~ /\/ruby_runtime$/
         ""
-      else
-        "<a href=\"txmt://open?url=file://#{h srcfile}&line=#{linenum}\" title=\"#{h srcfile}:#{linenum}\">#{linenum}</a>"
+        if RUBY_PLATFORM =~ /darwin/
+          "<a href=\"txmt://open?url=file://#{h srcfile}&line=#{linenum}\" title=\"#{h srcfile}:#{linenum}\">#{linenum}</a>"
+        else
+          "<a href=\"file://#{h srcfile}?line=#{linenum}\" title=\"#{h srcfile}:#{linenum}\">#{linenum}</a>"
+        end
       end
     end
 

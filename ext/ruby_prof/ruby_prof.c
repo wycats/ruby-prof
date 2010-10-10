@@ -1086,10 +1086,10 @@ prof_pop_threads()
 }
 
 #if RUBY_VERSION == 190
-# error 1.9.0 not supported (ask for it if desired)
+# error 1.9.0 not supported (ask for it if you desire it to be supported)
 #endif
 
-#if RUBY_VERSION == 191
+#if RUBY_VERSION >= 191
 
 /* Avoid bugs in 1.9.1 */
 
@@ -1160,7 +1160,7 @@ prof_event_hook(rb_event_flag_t event, NODE *node, VALUE self, ID mid, VALUE kla
     thread = rb_thread_current();
     thread_id = rb_obj_id(thread);
 
-   # if RUBY_VERSION == 191
+   # if RUBY_VERSION >= 191
      /* ensure that new threads are hooked [sigh] (bug in core) */
      prof_remove_hook();
      prof_install_hook();
@@ -1273,7 +1273,7 @@ prof_event_hook(rb_event_flag_t event, NODE *node, VALUE self, ID mid, VALUE kla
     }
 }
 
-#if RUBY_VERSION == 191
+#if RUBY_VERSION >= 191
 
 static inline void walk_up_until_right_frame(prof_frame_t *frame, thread_data_t* thread_data, ID mid, VALUE klass, prof_measure_t now) {
   // while it doesn't match, pop on up until we have found where we belong...
@@ -1613,6 +1613,11 @@ prof_resume(VALUE self)
 static VALUE
 prof_stop(VALUE self)
 {
+    if (threads_tbl == NULL)
+    {
+        rb_raise(rb_eRuntimeError, "RubyProf.start was not yet called");
+    }
+  
     VALUE result = Qnil;
 
     /* close trace file if open */
@@ -1660,7 +1665,7 @@ prof_profile(VALUE self)
     return prof_stop(self);
 }
 
-/* Get arround annoying limitations in RDOC */
+/* Get around annoying limitations in RDOC */
 
 /* Document-method: measure_process_time
    call-seq:
@@ -1726,8 +1731,10 @@ Returns the total number of garbage collections.*/
 Returns the time spent doing garbage collections in microseconds.*/
 
 
-#if defined(_WIN32)
-__declspec(dllexport)
+#if RUBY_VERSION == 191 // accomodate for this: http://redmine.ruby-lang.org/issues/show/3748
+# if defined(_WIN32)
+  __declspec(dllexport)
+# endif
 #endif
 void
 
