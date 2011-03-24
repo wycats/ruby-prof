@@ -1,5 +1,5 @@
---- a/gc.c
-+++ b/gc.c
+--- gc.c	(revision 31173)
++++ gc.c	(working copy)
 @@ -291,16 +291,12 @@
      struct gc_list *next;
  };
@@ -94,7 +94,25 @@
  /*
   *  call-seq:
   *     GC.malloc_allocated_size -> Integer
-@@ -3028,7 +2999,6 @@
+@@ -3008,8 +2979,8 @@
+  *  It returns the allocated size by malloc().
+  */
+ 
+-static VALUE
+-gc_malloc_allocated_size(VALUE self)
++VALUE
++rb_gc_malloc_allocated_size(VALUE self)
+ {
+     return UINT2NUM((&rb_objspace)->malloc_params.allocated_size);
+ }
+@@ -3023,12 +2994,11 @@
+  *  It returns the number of allocated memory object by malloc().
+  */
+ 
+-static VALUE
+-gc_malloc_allocations(VALUE self)
++VALUE
++rb_gc_malloc_allocations(VALUE self)
  {
      return UINT2NUM((&rb_objspace)->malloc_params.allocations);
  }
@@ -106,8 +124,8 @@
      rb_define_singleton_method(rb_mGC, "stress", gc_stress_get, 0);
      rb_define_singleton_method(rb_mGC, "stress=", gc_stress_set, 1);
      rb_define_singleton_method(rb_mGC, "count", gc_count, 0);
-+    rb_define_singleton_method(rb_mGC, "malloc_allocated_size", gc_malloc_allocated_size, 0);
-+    rb_define_singleton_method(rb_mGC, "malloc_allocations", gc_malloc_allocations, 0);
++    rb_define_singleton_method(rb_mGC, "malloc_allocated_size", rb_gc_malloc_allocated_size, 0);
++    rb_define_singleton_method(rb_mGC, "malloc_allocations", rb_gc_malloc_allocations, 0);
      rb_define_method(rb_mGC, "garbage_collect", rb_gc_start, 0);
  
      rb_mProfiler = rb_define_module_under(rb_mGC, "Profiler");
