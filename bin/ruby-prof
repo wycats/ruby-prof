@@ -8,46 +8,14 @@
 #
 # ruby_prof [options] <script.rb> [--] [script-options]"
 #
-# Options:
-#     -p, --printer=printer            Select a printer:
-#                                        flat - Prints a flat profile as text (default).
-#                                        flat_with_line_numbers - Above, with line numbers
-#                                        graph - Prints a graph profile as text.
-#                                        graph_html - Prints a graph profile as html.
-#                                        call_tree - format for KCacheGrind
-#                                        call_stack - prints a HTML visualization of the call tree
-#																				 dot - Prints a graph profile as a dot file
-#     -f, --file=path                  Output results to a file instead of standard out.
-#     -m, --min_percent=min_percent    The minimum percent a method must take before ',
-#                                      being included in output reports.  Should be an
-#                                      integer between 1 and 100.  0 means all methods are printed.
-#         --mode=measure_mode          Select a measurement mode:
-#                                        process - Use process time (default).
-#                                        wall - Use wall time.
-#                                        cpu - Use the CPU clock counter
-#                                              (only supported on Pentium and PowerPCs).
-#                                        allocations - Tracks object allocations
-#                                              (requires a patched Ruby interpreter).
-#                                        memory - Tracks total memory size
-#                                              (requires a patched Ruby interpreter).
-#                                        gc_runs - Tracks number of garbage collection runs
-#                                              (requires a patched Ruby interpreter).
-#                                        gc_time - Tracks time spent doing garbage collection
-#                                              (requires a patched Ruby interpreter).
-#         --replace-progname           Replace $0 when loading the .rb files.
-#         --specialized-instruction    Turn on specialized instruction.
-#     -h, --help                       Show help message
-#         --version                    Show version
-#     -v                               Show version, set $VERBOSE to true, run file
-#     -d                               Set $DEBUG to true
-# 
+# Various options:
+#        run "$ ruby-prof --help" to see them
 #
 # See also: {flat profiles}[link:files/examples/flat_txt.html], {graph profiles}[link:files/examples/graph_txt.html], {html graph profiles}[link:files/examples/graph_html.html]
-#
 
 require 'ostruct'
 require 'optparse'
-require 'ruby-prof'
+require File.dirname(__FILE__) + "/../lib/ruby-prof"
 
 options = OpenStruct.new
 options.measure_mode = RubyProf::PROCESS_TIME
@@ -59,7 +27,7 @@ options.specialized_instruction = false
 
 opts = OptionParser.new do |opts|
   opts.banner = "ruby_prof #{RubyProf::VERSION}\n" +
-                "Usage: ruby_prof [options] <script.rb> [--] [script-options]"
+                "Usage: ruby-prof [options] <script.rb> [--] [profiled-script-command-line-options]"
  
   opts.separator ""
   opts.separator "Options:"
@@ -157,14 +125,33 @@ opts = OptionParser.new do |opts|
       exit
   end
   
-  opts.on("-v","Show version, set $VERBOSE to true, profile script") do
-      puts "ruby_prof " + RubyProf::VERSION
-      puts "ruby " + RUBY_DESCRIPTION
-      $VERBOSE= true
+  opts.on("-v","Show version, set $VERBOSE to true, profile script if option given") do
+      puts "ruby version: " + [RUBY_PATCHLEVEL, RUBY_PLATFORM, RUBY_VERSION].join(' ')
+      $VERBOSE = true
   end
   
   opts.on("-d", "Set $DEBUG to true") do
     $DEBUG = true
+  end
+
+  opts.on('-R lib', '--require-noprof lib', 'require a specific library (not profiled)') do |lib|
+      options.pre_libs ||= []
+      options.pre_libs << lib
+  end
+
+  opts.on('-E code', '--eval-noprof code', 'execute the ruby statements (not profiled)') do |code|
+      options.pre_exec ||= []
+      options.pre_exec << code
+  end
+
+  opts.on('-r lib', '--require lib', 'require a specific library') do |lib|
+      options.libs ||= []
+      options.libs << lib
+  end
+
+  opts.on('-e code', '--eval', 'execute the ruby statements') do |code|
+      options.exec ||= []
+      options.exec << code
   end
 end
 
@@ -179,7 +166,7 @@ rescue OptionParser::InvalidOption, OptionParser::InvalidArgument,
 end
 
 # Make sure the user specified at least one file
-if ARGV.length < 1
+if ARGV.length < 1 and not options.exec
   puts opts
   puts ""
   puts "Must specify a script to run"
@@ -229,8 +216,28 @@ if options.replace_prog_name
   $0 = File.expand_path(script)
 end
 
+if options.pre_libs
+  options.pre_libs.each { |l| require l }
+end
+
+if options.pre_exec
+  options.pre_exec.each { |c| eval c }
+end
+
+# do not pollute profiling report with OpenStruct#libs
+ol = options.libs
+oe = options.exec
+
 # Start profiling
 RubyProf.start 
 
+if ol
+  ol.each { |l| require l }
+end
+
+if oe
+  oe.each { |c| eval c }
+end
+
 # Load the script
-load script
+load script if script

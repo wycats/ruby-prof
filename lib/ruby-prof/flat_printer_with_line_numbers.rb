@@ -1,5 +1,4 @@
-require 'ruby-prof/abstract_printer'
-require 'pathname'
+
 module RubyProf
   # Generates flat[link:files/examples/flat_txt.html] profile reports as text.
   # To use the flat printer with line numbers:
@@ -9,7 +8,7 @@ module RubyProf
   #   end
   #
   #   printer = RubyProf::FlatPrinterWithLineNumbers.new(result)
-  #   printer.print(STDOUT, 0)
+  #   printer.print(STDOUT, {})
   #
   class FlatPrinterWithLineNumbers < FlatPrinter
 

@@ -1,4 +1,3 @@
-require 'ruby-prof/abstract_printer'
 
 module RubyProf
   # Generates graph[link:files/examples/graph_txt.html] profile reports as text.
@@ -9,7 +8,7 @@ module RubyProf
   #   end
   #
   #   printer = RubyProf::GraphPrinter.new(result, 5)
-  #   printer.print(STDOUT, 0)
+  #   printer.print(STDOUT, {})
   #
   # The constructor takes two arguments. See the README
 

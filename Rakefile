@@ -4,71 +4,17 @@ require 'rake/rdoctask'
 require 'rake/testtask'
 require 'date'
 
-# ------- Version ----
-# Read version from header file
-version_header = File.read('ext/ruby_prof/version.h')
-match = version_header.match(/RUBY_PROF_VERSION\s*["](\d.+)["]/)
-raise(RuntimeError, "Could not determine RUBY_PROF_VERSION") if not match
-RUBY_PROF_VERSION = match[1]
+# to release a version of ruby-prof, do a git tag, then rake cleanr default and publish that
+# git tag 0.10.1
+# git push origin 0.10.1
+# rake cleanr default
+# gem push pkg/ruby-prof-0.10.1.gem
 
+default_spec = eval File.read(File.expand_path('../ruby-prof.gemspec', __FILE__))
 
-# ------- Default Package ----------
-FILES = FileList[
-  'Rakefile',
-  'README.rdoc',
-  'LICENSE',
-  'CHANGES',
-  'bin/*',
-  'doc/**/*',
-  'examples/*',
-  'ext/ruby_prof/*.c',
-  'ext/ruby_prof/*.h',
-  'ext/ruby_prof/mingw/Rakefile',
-  'ext/ruby_prof/mingw/build.rake',
-  'ext/vc/*.sln',
-  'ext/vc/*.vcproj',
-  'lib/**/*',
-  'rails/**/*',
-  'test/*'
-]
-
-# Default GEM Specification
-default_spec = Gem::Specification.new do |spec|
-  spec.name = "ruby-prof"
-
-  spec.homepage = "http://rubyforge.org/projects/ruby-prof/"
-  spec.summary = "Fast Ruby profiler"
-  spec.description = <<-EOF
-ruby-prof is a fast code profiler for Ruby. It is a C extension and
-therefore is many times faster than the standard Ruby profiler. It
-supports both flat and graph profiles.  For each method, graph profiles
-show how long the method ran, which methods called it and which
-methods it called. RubyProf generate both text and html and can output
-it to standard out or to a file.
-EOF
-
-  spec.version = RUBY_PROF_VERSION
-
-  spec.author = "Shugo Maeda, Charlie Savage, Roger Pack, Stefan Kaes"
-  spec.email = "shugo@ruby-lang.org, cfis@savagexi.com, rogerdpack@gmail.com, skaes@railsexpress.de"
-  spec.platform = Gem::Platform::RUBY
-  spec.require_path = "lib"
-  spec.bindir = "bin"
-  spec.executables = ["ruby-prof"]
-  spec.extensions = ["ext/ruby_prof/extconf.rb"]
-  spec.files = FILES.to_a
-  spec.test_files = Dir["test/test_*.rb"]
-  spec.required_ruby_version = '>= 1.8.4'
-  spec.date = DateTime.now
-  spec.rubyforge_project = 'ruby-prof'
-  spec.add_development_dependency 'os'
-  spec.add_development_dependency 'rake-compiler'
-
-end
-
-
-desc 'build native .gem files -- use like "native_gems clobber cross native gem"--for non native gem creation use "native_gems clobber" then "clean gem"'
+desc 'deprecated--build native .gem files -- use like "native_gems clobber cross native gem"--for non native gem creation use "native_gems clobber" then "clean gem"'
 task :native_gems do
+  # we don't do cross compiler anymore, now that mingw has devkit
   ENV['RUBY_CC_VERSION'] = '1.8.6:1.9.1'
   require 'rake/extensiontask'
   Rake::ExtensionTask.new('ruby_prof', default_spec) do |ext|
@@ -125,7 +71,7 @@ task :build do
     system(Gem.ruby + " extconf.rb")
     system("make clean")
   end
-  system("make")
+  raise 'make failed' unless system("make")
   FileUtils.cp 'ruby_prof.so', '../../lib' if File.exist? 'lib/ruby_prof.so'
   FileUtils.cp 'ruby_prof.bundle', '../../lib' if File.exist? 'lib/ruby_prof.bundle'
  end
@@ -133,8 +79,7 @@ end
 
 desc 'clean stuff'
 task :cleanr do
- FileUtils.rm 'lib/ruby_prof.so' if File.exist? 'lib/ruby_prof.so'
- FileUtils.rm 'lib/ruby_prof.bundle' if File.exist? 'lib/ruby_prof.bundle'
+ Dir['**/*.{so,bundle}'].each{|f| File.delete f}
  Dir.chdir('ext/ruby_prof') do
   if File.exist? 'Makefile'
     system("make clean")

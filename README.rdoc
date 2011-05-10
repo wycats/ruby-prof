@@ -12,7 +12,6 @@ ruby-prof is a fast code profiler for Ruby.  Its features include:
   - Call tree profiles - outputs results in the calltree format suitable for the KCacheGrind profiling tool.
 * Threads - supports profiling multiple threads simultaneously
 
-
 == Requirements
 
 ruby-prof requires Ruby 1.8.4 or higher.
@@ -21,7 +20,7 @@ If you are running Linux or Unix you'll need a C compiler so the extension
 can be compiled when it is installed.
 
 If you are running Windows, then you may need to install the
-Windows specific RubyGem which includes an already built extension (see below).
+Windows specific RubyGem which includes an already built extension (see Install section).
 
 == Install
 
@@ -30,11 +29,11 @@ The easiest way to install ruby-prof is by using Ruby Gems.  To install:
   gem install ruby-prof
 
 If you on windows mswin [not mingw] (check via ruby -v) and
-don't have an MSVC compiler, please install v0.7.3 which
+don't have an MSVC compiler, please install v0.8.1 which
 has a prebuilt binary
-C:> gem install ruby-prof -v0.7.3
+C:> gem install ruby-prof -v0.8.1
 
-If you're on mingw, please install the devkit first, then install the latest version (gem install ruby-prof).
+If you're on mingw, please install the devkit first, then install the latest gem version (via gem install ruby-prof).
 
 == Usage
 
@@ -79,7 +78,7 @@ to profile:
 
   # Print a graph profile to text
   printer = RubyProf::GraphPrinter.new(result)
-  printer.print(STDOUT, 0)
+  printer.print(STDOUT, {})
 
 Starting with the 0.6.1 release, ruby-prof also supports pausing and resuming
 profiling runs.
@@ -110,18 +109,14 @@ has not yet started.  In addition, resume can also take a block:
 With this usage, resume will automatically call pause at the
 end of the block.
 
-
 === require unprof
 
 The third way of using ruby-prof is by requiring unprof.rb:
 
   require 'unprof'
 
-This will start profiling immediately and will output the results
-using a flat profile report.
-
-This method is provided for backwards compatibility.  Using the
-ruby-prof command provides more flexibility.
+This will start profiling immediately at that point and will output the results
+using a flat profile report when the process ends.
 
 == Method Elimination
 
@@ -145,6 +140,22 @@ the name of a file containing a list of regular expressions (line separated text
 After eliminating methods the resulting profile will appear exactly as if those methods
 had been inlined at their call sites.
 
+== Benchmarking full load time including rubygems startup cost ==
+
+If you want to get a more accurate measurement of what takes all of a gem's bin/xxx
+command to load, you may want to also measure rubygems' startup penalty.
+You can do this by calling into bin/ruby-prof directly, ex:
+
+$ gem which ruby-prof
+  g:/192/lib/ruby/gems/1.9.1/gems/ruby-prof-0.10.2/lib/ruby-prof.rb
+
+now run it thus (substitute lib/ruby-prof.rb with bin/ruby-prof):
+
+$ ruby g:/192/lib/ruby/gems/1.9.1/gems/ruby-prof-0.10.2/bin/ruby-prof g:\192\bin\some_installed_gem_command
+
+or
+
+$ ruby g:/192/lib/ruby/gems/1.9.1/gems/ruby-prof-0.10.2/bin/ruby-prof ./some_file_that_does_a_require_rubygems_at_the_beginning.rb
 
 == Profiling Tests
 
@@ -230,6 +241,7 @@ ruby-prof can generate a number of different reports:
 * HTML Graph Reports
 * Call graphs
 * Call stack reports
+* More!
 
 Flat profiles show the overall time spent in each method. They
 are a good of quickly identifying which methods take the most time.
@@ -276,6 +288,7 @@ Reports are created by printers.  Supported printers include:
 * RubyProf::CallTreePrinter - Creates a call tree report compatible with KCachegrind.
 * RubyProf::CallStackPrinter - Creates a HTML visualization of the Ruby stack
 * RubyProf::MultiPrinter - Uses the other printers to create several reports in one profiling run
+* More!
 
 To use a printer:
 
@@ -427,7 +440,8 @@ profiled.  Most programs will run approximately twice as slow
 while highly recursive programs (like the fibonacci series test)
 will run three times slower.
 
-Because of some threading difficulties in 1.9, it currently runs a bit slower there.
+Because of some threading difficulties in 1.9, it currently runs a 
+bit slower there, as well.
 http://www.ruby-forum.com/topic/201329
 
 == License
@@ -437,3 +451,5 @@ See LICENSE for license information.
 == Development
 
 Code is located at http://github.com/rdp/ruby-prof
+
+Google group/mailing list: http://groups.google.com/group/ruby-prof

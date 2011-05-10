@@ -1,32 +1,35 @@
-# require the  .so file...
-
-me = File.dirname(__FILE__) + '/'
-begin
-  # fat binaries
-  require "#{me}/#{RUBY_VERSION[0..2]}/ruby_prof"
-rescue Exception
-  require "#{me}/../ext/ruby_prof/ruby_prof"
-end
-
-require "ruby-prof/result"
-require "ruby-prof/method_info"
-require "ruby-prof/call_info"
-require "ruby-prof/aggregate_call_info"
-require "ruby-prof/flat_printer"
-require "ruby-prof/flat_printer_with_line_numbers"
-require "ruby-prof/graph_printer"
-require "ruby-prof/graph_html_printer"
-require "ruby-prof/graph_yaml_printer"
-require "ruby-prof/call_tree_printer"
-require "ruby-prof/call_stack_printer"
-require "ruby-prof/multi_printer"
-require "ruby-prof/dot_printer"
-require "ruby-prof/symbol_to_proc" # for 1.8's benefit
-require "ruby-prof/rack"
-#require "ruby-prof/result"
+# require the .so file...
+require  File.dirname(__FILE__) + "/../ext/ruby_prof/ruby_prof"
 
 module RubyProf
-  # See if the user specified the clock mode via
+  
+  if RUBY_VERSION < '1.8.7'
+    require File.dirname(__FILE__) + '/ruby-prof/symbol_to_proc'
+  end
+  
+  def self.camelcase(phrase)
+    ('_' + phrase).gsub(/_([a-z])/){|b| b[1..1].upcase}
+  end
+  
+  lib_dir = File.dirname(__FILE__) + '/ruby-prof/'
+  
+  for file in ['abstract_printer', 'aggregate_call_info', 'flat_printer', 'flat_printer_with_line_numbers', 
+    'graph_printer', 'graph_html_printer', 'call_tree_printer', 'call_stack_printer', 'multi_printer', 'dot_printer']
+    autoload camelcase(file), lib_dir + file
+  end
+
+  # A few need to be loaded manually their classes were already defined by the .so file so autoload won't work for them.
+  # plus we need them anyway
+  for name in ['result', 'method_info', 'call_info']
+    require lib_dir + name
+  end
+  
+  require File.dirname(__FILE__) + '/ruby-prof/rack' # do we even need to load this every time?
+  
+  # we don't require unprof.rb, as well, purposefully
+  
+  
+  # Checks if the user specified the clock mode via
   # the RUBY_PROF_MEASURE_MODE environment variable
   def self.figure_measure_mode
     case ENV["RUBY_PROF_MEASURE_MODE"]
