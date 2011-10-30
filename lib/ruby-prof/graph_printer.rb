@@ -1,3 +1,4 @@
+# encoding: utf-8
 
 module RubyProf
   # Generates graph[link:files/examples/graph_txt.html] profile reports as text.
@@ -62,7 +63,7 @@ module RubyProf
 
     def print_methods(thread_id, methods)
       # Sort methods from longest to shortest total time
-      methods = methods.sort
+      methods = methods.sort_by(&sort_method)
 
       toplevel = methods.last
       total_time = toplevel.total_time

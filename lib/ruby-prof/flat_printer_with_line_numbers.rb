@@ -1,3 +1,4 @@
+# encoding: utf-8
 
 module RubyProf
   # Generates flat[link:files/examples/flat_txt.html] profile reports as text.
@@ -20,11 +21,7 @@ module RubyProf
         total_time = 0.01
       end
 
-      # Now sort methods by largest self time,
-      # not total time like in other printouts
-      methods = methods.sort do |m1, m2|
-        m1.self_time <=> m2.self_time
-      end.reverse
+      methods = methods.sort_by(&sort_method).reverse
 
       @output << "Thread ID: %d\n" % thread_id
       @output << "Total: %0.6f\n" % total_time

@@ -1,12 +1,15 @@
-# require the .so file...
-require  File.dirname(__FILE__) + "/../ext/ruby_prof/ruby_prof"
+# encoding: utf-8
+
+# Load the C-based binding.
+begin
+  RUBY_VERSION =~ /(\d+.\d+)/
+  require "#{$1}/ruby_prof"
+rescue LoadError
+  require "ruby_prof"
+end
+
 
 module RubyProf
-  
-  if RUBY_VERSION < '1.8.7'
-    require File.dirname(__FILE__) + '/ruby-prof/symbol_to_proc'
-  end
-  
   def self.camelcase(phrase)
     ('_' + phrase).gsub(/_([a-z])/){|b| b[1..1].upcase}
   end
@@ -27,7 +30,6 @@ module RubyProf
   require File.dirname(__FILE__) + '/ruby-prof/rack' # do we even need to load this every time?
   
   # we don't require unprof.rb, as well, purposefully
-  
   
   # Checks if the user specified the clock mode via
   # the RUBY_PROF_MEASURE_MODE environment variable

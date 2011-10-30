@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'erb'
 require 'fileutils'
 
@@ -5,10 +7,6 @@ module RubyProf
   # prints a HTML visualization of the call tree
   class CallStackPrinter < AbstractPrinter
     include ERB::Util
-
-    def initialize(result)
-      super(result)
-    end
 
     # Specify print options.
     #
@@ -123,7 +121,7 @@ module RubyProf
         if RUBY_PLATFORM =~ /darwin/
           "<a href=\"txmt://open?url=file://#{file}&line=#{method.line}\">#{h(name(call_info))}</a>"
         else
-          "<a href=\"file://#{file}?line=#{method.line}\">#{h(name(call_info))}</a>"
+          "<a href=\"file://#{file}##{method.line}\">#{h(name(call_info))}</a>"
         end
       end
     end

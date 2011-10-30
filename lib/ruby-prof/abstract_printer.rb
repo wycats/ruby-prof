@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module RubyProf
   class AbstractPrinter
     def initialize(result)
@@ -18,6 +20,10 @@ module RubyProf
     #   :print_file  - True or false. Specifies if a method's source
     #                  file should be printed.  Default value if false.
     #
+    #   :sort_method - Specifies method used for sorting method infos.
+    #                  Available values are :total_time, :self_time,
+    #                  :wait_time, :children_time
+    #                  Default value is :total_time
     def setup_options(options = {})
       @options = options
     end
@@ -28,6 +34,10 @@ module RubyProf
 
     def print_file
       get_options_key("print_file") || false
+    end
+
+    def sort_method
+      @options[:sort_method] || :total_time
     end
 
     def method_name(method)

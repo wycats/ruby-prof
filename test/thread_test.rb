@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
-require 'test/unit'
-require 'ruby-prof'
+# encoding: UTF-8
+
+require './test_helper'
 require 'timeout'
 
 # --  Tests ----
@@ -155,7 +156,7 @@ class ThreadTest < Test::Unit::TestCase
                 a.join
                 b.join
         end
-        assert result.threads.values.flatten.sort[-1].total_time < 10 # 10s
+        assert result.threads.values.flatten.sort[-1].total_time < 10 # 10s. Amazingly, this can fail in OS X at times. Amazing.
   end
 
   def test_thread
